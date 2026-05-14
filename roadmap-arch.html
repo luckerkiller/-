@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>计提 + PTP 全景系统架构 · Roadmap</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #f4f5f7; color: #1a1a1a;
+  padding: 28px 36px 52px;
+  min-width: 960px;
+}
+
+/* ══ Phase colors ══ */
+.pb { display:inline-flex;align-items:center;font-size:8px;font-weight:800;padding:1px 7px;border-radius:10px;margin-left:5px;vertical-align:middle; }
+.pb-p1 { background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe; }
+.pb-p2 { background:#ede9fe;color:#5b21b6;border:1px solid #ddd6fe; }
+.pb-p3 { background:#ccfbf1;color:#0f766e;border:1px solid #99f6e4; }
+.pb-p4 { background:#fef3c7;color:#92400e;border:1px solid #fde68a; }
+
+/* ══ Page header ══ */
+.pg-title { font-size:18px;font-weight:700;color:#111;margin-bottom:3px; }
+.pg-sub   { font-size:11px;color:#aaa;margin-bottom:22px; }
+
+/* ══ Arch container ══ */
+.arch { display:flex;flex-direction:column;gap:0; }
+
+/* ══ Every row = label(56px) + content ══ */
+.row { display:flex;align-items:stretch;gap:8px; }
+
+.lbl {
+  width:56px;flex-shrink:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;
+}
+.lbl-num  { font-size:9px;font-weight:700;color:#c0c0c0; }
+.lbl-name { writing-mode:vertical-rl;font-size:10px;font-weight:700;
+            letter-spacing:2px;color:#888;text-orientation:mixed; }
+
+/* ══ Layer box base ══ */
+.layer { flex:1;border-radius:8px;padding:12px 14px; }
+
+/* L1 */
+.l1 { background:#fff;border:1px solid #e2e4e8; }
+/* L2 */
+.l2 { background:#f0fdf4;border:1.5px solid #86efac;border-left:4px solid #16a34a; }
+/* L3 jiti */
+.l3j { background:#f0f4ff;border:1.5px solid #c4d0f0;border-top:4px solid #3a5bc0; }
+/* L3 ptp */
+.l3p { background:#f0fdfa;border:1.5px solid #99e6d4;border-top:4px solid #0f766e; }
+/* L4 cs */
+.l4c { background:#f0f4ff;border:1.5px solid #c4d0f0;border-top:4px solid #3a5bc0; }
+/* L4 ap */
+.l4a { background:#f0fdfa;border:1.5px solid #99e6d4;border-top:4px solid #0f766e; }
+/* L5 */
+.l5  { background:#1e3a8a;border:none; }
+
+/* ══ Layer header ══ */
+.lh { font-size:12px;font-weight:700;color:#222;margin-bottom:10px;
+      display:flex;align-items:center;gap:7px;flex-wrap:wrap; }
+.lh-sub { font-size:10px;font-weight:400;color:#aaa; }
+.lh-jiti { color:#1e3a8a; }
+.lh-ptp  { color:#134e4a; }
+.lh-sap  { color:#fff;font-size:13px; }
+
+/* ══ Source group ══ */
+.sg {
+  border-radius:7px;padding:10px 12px;
+}
+.sg-otd { background:#eff6ff;border:1px solid #bfdbfe;flex:1; }
+.sg-ptp { background:#f0fdfa;border:1px solid #99e6d4;flex:1; }
+.sg-head {
+  font-size:9px;font-weight:700;padding:2px 9px;border-radius:3px;
+  color:#fff;display:inline-block;margin-bottom:7px;
+}
+.sg-otd .sg-head { background:#3a5bc0; }
+.sg-ptp .sg-head { background:#0f766e; }
+.sg-note { font-size:9px;color:#93c5fd;margin-left:6px; }
+.sg-ptp .sg-note { color:#5eead4; }
+.chips { display:flex;flex-wrap:wrap;gap:5px;margin-top:4px; }
+.chip {
+  font-size:9.5px;font-weight:600;padding:3px 10px;border-radius:11px;
+}
+.chip-o { background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe; }
+.chip-p { background:#f0fdfa;color:#0f766e;border:1px solid #99e6d4; }
+
+/* ══ Module cards ══ */
+.grid2 { display:grid;grid-template-columns:1fr 1fr;gap:7px; }
+.grid3 { display:grid;grid-template-columns:repeat(3,1fr);gap:7px; }
+.grid4 { display:grid;grid-template-columns:repeat(4,1fr);gap:7px; }
+
+.mod {
+  background:#fff;border:1px solid #e4e4e4;border-radius:6px;padding:8px 10px;
+}
+.mod-t { font-size:10.5px;font-weight:700;color:#222;margin-bottom:3px; }
+.mod-d { font-size:9px;color:#888;line-height:1.55; }
+
+.mod1 { border-left:3px solid #3a5bc0; }
+.mod1 .mod-t { color:#1e3a8a; }
+.mod2 { border-left:3px solid #6d28d9; }
+.mod2 .mod-t { color:#4c1d95; }
+.mod3 { border-left:3px solid #0f766e; }
+.mod3 .mod-t { color:#134e4a; }
+.mod4 { border-left:3px solid #16a34a; }
+.mod4 .mod-t { color:#14532d; }
+
+/* ══ AI band ══ */
+.ai-band {
+  margin-top:7px;background:#eff6ff;border:1px solid #bfdbfe;
+  border-left:3px solid #3a5bc0;border-radius:6px;
+  padding:8px 12px;display:flex;align-items:center;gap:10px;
+}
+.ai-band-t { font-size:10.5px;font-weight:700;color:#1e3a8a;margin-bottom:2px; }
+.ai-band-d { font-size:9px;color:#1d4ed8; }
+
+/* ══ SAP content ══ */
+.sap-row { display:flex;align-items:center;gap:14px; }
+.sap-icon { font-size:22px; }
+.sap-t  { font-size:13px;font-weight:700;color:#fff; }
+.sap-d  { font-size:9.5px;color:rgba(255,255,255,.6);margin-top:2px; }
+.sap-tags { display:flex;gap:7px;flex-wrap:wrap;margin-left:auto; }
+.sap-tag {
+  font-size:9px;color:rgba(255,255,255,.85);
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  border-radius:3px;padding:2px 8px;
+}
+
+/* ══ Connectors ══ */
+.conn {
+  padding:5px 0 5px 64px;
+  display:flex;align-items:center;gap:7px;
+}
+.conn-arr { font-size:14px;color:#d0d0d0; }
+.conn-lbl {
+  font-size:9.5px;color:#bbb;
+  border:1px solid #eaeaea;border-radius:3px;
+  padding:1px 8px;background:#fafafa;white-space:nowrap;
+}
+
+/* Split connector (branches) */
+.conn-split {
+  display:flex;gap:8px;padding:4px 0;
+}
+.conn-split-spacer { width:64px;flex-shrink:0; }
+.conn-split-l { flex:1;display:flex;flex-direction:column;align-items:center;gap:1px; }
+.conn-split-r { flex:1;display:flex;flex-direction:column;align-items:center;gap:1px; }
+.conn-split-sep { width:10px;flex-shrink:0; }
+.cs-arr  { font-size:14px;color:#d0d0d0; }
+.cs-lbl  { font-size:9px;color:#c0c0c0; }
+
+/* Merge connector */
+.conn-merge {
+  display:flex;gap:8px;padding:4px 0;
+}
+.conn-merge-spacer { width:64px;flex-shrink:0; }
+.conn-merge-l { flex:1;text-align:center;font-size:14px;color:#d0d0d0; }
+.conn-merge-r { flex:1;text-align:center;font-size:14px;color:#d0d0d0; }
+.conn-merge-sep { width:10px;flex-shrink:0; }
+
+/* ══ Split content rows ══ */
+.split-content { flex:1;display:flex;gap:10px; }
+.sc-l { flex:1; }
+.sc-r { flex:1; }
+
+/* ══ Roadmap ══ */
+.rm-wrap { margin-bottom:22px; }
+.rm-title {
+  font-size:12px;font-weight:700;color:#333;
+  margin-bottom:10px;display:flex;align-items:center;gap:7px;
+}
+.rm-title span { font-size:10px;font-weight:400;color:#aaa; }
+
+.rm-track {
+  display:flex;border-radius:8px;overflow:hidden;
+  border:1px solid #e2e4e8;
+}
+.rm-col { flex:1;padding:13px 14px;position:relative; }
+.rm-col + .rm-col { border-left:1px solid #e2e4e8; }
+.rm-c1 { background:#f0f4ff; }
+.rm-c2 { background:#f3eeff; }
+.rm-c3 { background:#f0fdfa; }
+.rm-c4 { background:#fffbeb; }
+
+.rm-col::before {
+  content:'';display:block;height:3px;border-radius:1px;margin-bottom:10px;
+}
+.rm-c1::before { background:#3a5bc0; }
+.rm-c2::before { background:#6d28d9; }
+.rm-c3::before { background:#0f766e; }
+.rm-c4::before { background:#b45309; }
+
+.rm-hd { display:flex;align-items:center;gap:7px;margin-bottom:9px; }
+.rm-num {
+  width:21px;height:21px;border-radius:50%;
+  font-size:10px;font-weight:800;color:#fff;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.rm-c1 .rm-num { background:#3a5bc0; }
+.rm-c2 .rm-num { background:#6d28d9; }
+.rm-c3 .rm-num { background:#0f766e; }
+.rm-c4 .rm-num { background:#b45309; }
+
+.rm-n  { font-size:11px;font-weight:700;line-height:1.3; }
+.rm-s  { font-size:9px;margin-top:2px; }
+.rm-c1 .rm-n { color:#1e3a8a; }  .rm-c1 .rm-s { color:#6080c0; }
+.rm-c2 .rm-n { color:#4c1d95; }  .rm-c2 .rm-s { color:#7c3aed; }
+.rm-c3 .rm-n { color:#134e4a; }  .rm-c3 .rm-s { color:#0d9488; }
+.rm-c4 .rm-n { color:#78350f; }  .rm-c4 .rm-s { color:#d97706; }
+
+.rm-chips { display:flex;flex-wrap:wrap;gap:4px;margin-bottom:9px; }
+.rm-chip {
+  font-size:9px;padding:2px 7px;border-radius:10px;
+  white-space:nowrap;border:1px solid;
+}
+.rm-c1 .rm-chip { background:#fff;color:#2d4faa;border-color:#b0c0e8; }
+.rm-c2 .rm-chip { background:#fff;color:#5b21b6;border-color:#c4a0f0; }
+.rm-c3 .rm-chip { background:#fff;color:#0f766e;border-color:#80d0c0; }
+.rm-c4 .rm-chip { background:#fff;color:#92400e;border-color:#e8c060; }
+
+.rm-status {
+  display:inline-block;font-size:8px;font-weight:600;
+  padding:2px 8px;border-radius:3px;
+}
+.rm-c1 .rm-status { background:#dbeafe;color:#1d4ed8; }
+.rm-c2 .rm-status { background:#ede9fe;color:#5b21b6; }
+.rm-c3 .rm-status { background:#ccfbf1;color:#0f766e; }
+.rm-c4 .rm-status { background:#fef3c7;color:#92400e; }
+</style>
+</head>
+<body>
+
+<div class="pg-title">计提 + PTP 全景系统架构 · Roadmap</div>
+<div class="pg-sub">分阶段实现路径 · 架构图中各模块色条与阶段颜色一一对应</div>
+
+<!-- ══════════════════════════════════════
+     Roadmap 分阶段实现路径
+══════════════════════════════════════ -->
+<div class="rm-wrap">
+  <div class="rm-title">
+    🗺️ Roadmap · 分阶段实现路径
+    <span>— 下方架构图中各模块色条与阶段颜色一一对应</span>
+  </div>
+  <div class="rm-track">
+
+    <!-- P1 -->
+    <div class="rm-col rm-c1">
+      <div class="rm-hd">
+        <div class="rm-num">1</div>
+        <div>
+          <div class="rm-n">MVP 交付</div>
+          <div class="rm-s">计提核心流程上线</div>
+        </div>
+      </div>
+      <div class="rm-chips">
+        <span class="rm-chip">📂 人工上传（计提）</span>
+        <span class="rm-chip">📋 计提管理</span>
+        <span class="rm-chip">✅ 审批管理</span>
+        <span class="rm-chip">⚙️ 规则配置</span>
+        <span class="rm-chip">🏦 CS 抛账</span>
+        <span class="rm-chip">ES 系统接入</span>
+      </div>
+      <div class="rm-status">🚀 MVP 交付</div>
+    </div>
+
+    <!-- P2 -->
+    <div class="rm-col rm-c2">
+      <div class="rm-hd">
+        <div class="rm-num">2</div>
+        <div>
+          <div class="rm-n">建设调账能力</div>
+          <div class="rm-s">调账管理 · 完善逆向流程</div>
+        </div>
+      </div>
+      <div class="rm-chips">
+        <span class="rm-chip">📂 人工上传（调账）</span>
+        <span class="rm-chip">🔄 调账管理</span>
+        <span class="rm-chip">↩️ 逆向冲销</span>
+        <span class="rm-chip">⚙️ 规则扩展配置</span>
+        <span class="rm-chip">SWO / TP 深度接入</span>
+      </div>
+      <div class="rm-status">🔄 能力扩展</div>
+    </div>
+
+    <!-- P3 -->
+    <div class="rm-col rm-c3">
+      <div class="rm-hd">
+        <div class="rm-num">3</div>
+        <div>
+          <div class="rm-n">统一工作台看板</div>
+          <div class="rm-s">计提 / PTP 双线聚合展示</div>
+        </div>
+      </div>
+      <div class="rm-chips">
+        <span class="rm-chip">📊 工作台看板</span>
+        <span class="rm-chip">🔔 待审批提醒</span>
+        <span class="rm-chip">📈 月度汇总</span>
+        <span class="rm-chip">PTP 预提报账平台接入</span>
+        <span class="rm-chip">💳 共享 AP 抛账</span>
+        <span class="rm-chip">FDP 报表聚合</span>
+      </div>
+      <div class="rm-status">📊 双线聚合</div>
+    </div>
+
+    <!-- P4 -->
+    <div class="rm-col rm-c4">
+      <div class="rm-hd">
+        <div class="rm-num">4</div>
+        <div>
+          <div class="rm-n">统一核算抛账引擎</div>
+          <div class="rm-s">CS 与共享 AP 核算通道合并</div>
+        </div>
+      </div>
+      <div class="rm-chips">
+        <span class="rm-chip">🔮 统一凭证生成</span>
+        <span class="rm-chip">CS 会计引擎</span>
+        <span class="rm-chip">共享 AP 核算</span>
+        <span class="rm-chip">凭证状态统一回写</span>
+        <span class="rm-chip">🗂️ 财务报表聚合</span>
+      </div>
+      <div class="rm-status">🔮 远期规划</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="arch">
+
+  <!-- ══ L1: 业务系统接入 ══ -->
+  <div class="row">
+    <div class="lbl">
+      <div class="lbl-num">L 1</div>
+      <div class="lbl-name">业务接入</div>
+    </div>
+    <div class="layer l1">
+      <div class="lh">
+        业务系统接入层
+        <span class="lh-sub">— 上游业务数据推送至计提 / PTP 系统</span>
+      </div>
+      <div style="display:flex;gap:12px;">
+
+        <!-- OTD -->
+        <div class="sg sg-otd">
+          <div>
+            <span class="sg-head">OTD 流程系统</span>
+            <span class="sg-note">Order to Delivery · 订单到交付</span>
+          </div>
+          <div class="chips">
+            <span class="chip chip-o">ES 企业服务系统</span>
+            <span class="chip chip-o">充电网络系统</span>
+            <span class="chip chip-o">商城系统</span>
+            <span class="chip chip-o">内采系统</span>
+            <span class="chip chip-o">售后系统</span>
+            <span class="chip chip-o">权益系统</span>
+            <span class="chip chip-o">充电桩系统</span>
+            <span class="chip chip-o">二手车系统</span>
+          </div>
+        </div>
+
+        <!-- PTP -->
+        <div class="sg sg-ptp">
+          <div>
+            <span class="sg-head">PTP 流程系统</span>
+            <span class="sg-note">Procure to Pay · 采购到付款</span>
+          </div>
+          <div class="chips">
+            <span class="chip chip-p">行政结算</span>
+            <span class="chip chip-p">京东采买</span>
+            <span class="chip chip-p">VL 物流管理</span>
+            <span class="chip chip-p">外援系统</span>
+            <span class="chip chip-p">财务共享</span>
+            <span class="chip chip-p">Ariba</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- connector L1→L2 -->
+  <div class="conn">
+    <div class="conn-arr">↓</div>
+    <span class="conn-lbl">业务单据 / 数据推送</span>
+  </div>
+
+  <!-- ══ L2: 统一工作台 ══ -->
+  <div class="row">
+    <div class="lbl">
+      <div class="lbl-num">L 2</div>
+      <div class="lbl-name">工作台</div>
+    </div>
+    <div class="layer l2">
+      <div class="lh">
+        统一工作台看板
+        <span class="pb pb-p3">Phase 3</span>
+        <span class="lh-sub">— 计提调账 + PTP 双系统聚合展示，统一操作入口</span>
+      </div>
+      <div class="grid4">
+        <div class="mod mod4">
+          <div class="mod-t">🔔 待审批提醒</div>
+          <div class="mod-d">计提单 · 调账单 · 预提单 全类型汇总</div>
+        </div>
+        <div class="mod mod4">
+          <div class="mod-t">📈 月度计提汇总</div>
+          <div class="mod-d">按类型 / 按系统来源 / 按状态</div>
+        </div>
+        <div class="mod mod4">
+          <div class="mod-t">📋 最近单据列表</div>
+          <div class="mod-d">计提单 · 调账单 · 预提单 最新动态</div>
+        </div>
+        <div class="mod mod4">
+          <div class="mod-t">⚡ 快速操作入口</div>
+          <div class="mod-d">新建计提 · 发起调账 · 手工预提</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- split connector L2→L3 -->
+  <div class="conn-split">
+    <div class="conn-split-spacer"></div>
+    <div class="conn-split-l">
+      <div class="cs-arr">↙</div>
+      <div class="cs-lbl">OTD 计提 / 调账业务</div>
+    </div>
+    <div class="conn-split-sep"></div>
+    <div class="conn-split-r">
+      <div class="cs-arr">↘</div>
+      <div class="cs-lbl">PTP 采购预提业务</div>
+    </div>
+  </div>
+
+  <!-- ══ L3: 两系统并排 ══ -->
+  <div class="row">
+    <div class="lbl">
+      <div class="lbl-num">L 3</div>
+      <div class="lbl-name">计提系统</div>
+    </div>
+    <div class="split-content">
+
+      <!-- 计提调账系统 -->
+      <div class="layer l3j sc-l">
+        <div class="lh lh-jiti">
+          📋 OTD 流程计提
+          <span class="lh-sub">— OTD 收入 / 成本 / 费用计提 + 调账管理</span>
+        </div>
+
+        <!-- 人工上传（跨P1+P3） -->
+        <div class="mod" style="border-left:3px solid #3a5bc0;margin-bottom:7px;">
+          <div class="mod-t">
+            📂 人工上传
+            <span class="pb pb-p1">P1 · 计提</span>
+            <span class="pb pb-p3">P3 · 调账</span>
+          </div>
+          <div class="mod-d">下载模板 · 上传 Excel · 格式校验 · 附佐证附件</div>
+        </div>
+
+        <!-- 四个功能模块 2×2 -->
+        <div class="grid2" style="margin-bottom:7px;">
+          <div class="mod mod1">
+            <div class="mod-t">📋 计提管理 <span class="pb pb-p1">P1</span></div>
+            <div class="mod-d">收入/成本/费用计提 · 草稿→审批→已记账</div>
+          </div>
+          <div class="mod mod2">
+            <div class="mod-t">🔄 调账管理 <span class="pb pb-p3">P3</span></div>
+            <div class="mod-d">调账单 · 关联原计提单 · 冲销/补录</div>
+          </div>
+          <div class="mod mod1">
+            <div class="mod-t">✅ 审批管理 <span class="pb pb-p1">P1</span></div>
+            <div class="mod-d">统一审批流 · 上级/财务BP · 进度追踪</div>
+          </div>
+          <div class="mod mod1">
+            <div class="mod-t">⚙️ 规则配置 <span class="pb pb-p1">P1</span></div>
+            <div class="mod-d">OTD/PTP/通用记账规则 · 科目映射</div>
+          </div>
+        </div>
+
+        <!-- AI Agent band -->
+        <div class="ai-band">
+          <div style="font-size:16px;">🤖</div>
+          <div>
+            <div class="ai-band-t">AI Agent 智能交互层 <span class="pb pb-p2">P2</span></div>
+            <div class="ai-band-d">智能上传 · 单据查询 · 审批辅助 · 数据问答 · 大语言模型驱动</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PTP 预提报账平台 -->
+      <div class="layer l3p sc-r">
+        <div class="lh lh-ptp">
+          🔄 PTP 预提报账平台
+          <span class="pb pb-p3">Phase 3</span>
+          <span class="lh-sub">— 采购费用预提</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:7px;">
+          <div class="mod mod3">
+            <div class="mod-t">📦 采购订单管理</div>
+            <div class="mod-d">行政结算 / 京东采买 / VL物流 / 外援 / 财务共享 / Ariba 接口接入 · 创建/变更/作废 · 验收关联校验</div>
+          </div>
+          <div class="mod mod3">
+            <div class="mod-t">📄 预提单 / 验收单管理</div>
+            <div class="mod-d">版本化管理 · 合同额度占用 · 防重校验 · BP批量导入</div>
+          </div>
+          <div class="mod mod3">
+            <div class="mod-t">💰 付款关联 · 预提规则矩阵</div>
+            <div class="mod-d">自动/手工/无需预提判断 · 摊销规则 · 预算占用管控</div>
+          </div>
+          <div class="mod mod3">
+            <div class="mod-t">↩️ 逆向处理（8 种场景）</div>
+            <div class="mod-d">SRM驳回 / AP驳回 / 退票 × 是否已记账 × 是否跨月</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- split connector L3→L4 -->
+  <div class="conn-split">
+    <div class="conn-split-spacer"></div>
+    <div class="conn-split-l">
+      <div class="cs-arr">↓</div>
+      <div class="cs-lbl">审批通过 → CS 核算记账</div>
+    </div>
+    <div class="conn-split-sep"></div>
+    <div class="conn-split-r">
+      <div class="cs-arr">↓</div>
+      <div class="cs-lbl">预提单 → 共享付款抛账</div>
+    </div>
+  </div>
+
+  <!-- ══ L4: 核算抛账 ══ -->
+  <div class="row">
+    <div class="lbl">
+      <div class="lbl-num">L 4</div>
+      <div class="lbl-name">核算抛账</div>
+    </div>
+    <div class="split-content">
+
+      <!-- CS抛账 -->
+      <div class="layer l4c sc-l">
+        <div class="lh lh-jiti">
+          🏦 CS 系统（核算记账）
+          <span class="pb pb-p1">Phase 1</span>
+          <span class="lh-sub">— 计提 / 调账核算</span>
+        </div>
+        <div class="grid2">
+          <div class="mod mod1">
+            <div class="mod-t">计提 & 调账单核算</div>
+            <div class="mod-d">接收审批通过单据 · 匹配记账规则 · 生成凭证参数 · 状态回写</div>
+          </div>
+          <div class="mod mod1">
+            <div class="mod-t">CS 会计引擎</div>
+            <div class="mod-d">触发核算记账 · 回写「已记账」状态 · 财务凭证生成</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 共享AP抛账 -->
+      <div class="layer l4a sc-r">
+        <div class="lh lh-ptp">
+          💳 共享付款系统（AP 核算）
+          <span class="pb pb-p3">Phase 3</span>
+          <span class="lh-sub">— 预提付款核算</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px;">
+          <div class="mod mod3">
+            <div class="mod-t">付款单 / 报销单核算</div>
+            <div class="mod-d">关联预提单 · 生成应付凭证 · 银行凭证 · 状态回写预提系统</div>
+          </div>
+          <div class="mod mod3">
+            <div class="mod-t">逆向凭证处理</div>
+            <div class="mod-d">驳回/退票 → 应付凭证冲销 · 银行凭证冲销 · 跨月处理</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- L4 future planning: unified accounting engine -->
+  <div style="padding-left:64px;margin-top:6px;margin-bottom:2px;">
+    <div style="border:1.5px dashed #94a3b8;border-radius:7px;padding:9px 16px;background:#f8fafc;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:13px;">🔮</span>
+      <span style="font-size:10.5px;font-weight:800;color:#475569;white-space:nowrap;">规划中 · 统一核算抛账引擎</span>
+      <span style="font-size:9px;color:#64748b;flex:1;min-width:200px;">远期将 CS 会计引擎与共享付款系统核算能力合并，统一凭证生成与状态回写链路，实现计提 / 预提 / 调账的一体化核算出口</span>
+      <span style="font-size:8.5px;font-weight:700;padding:2px 9px;border-radius:10px;background:#f1f5f9;color:#94a3b8;border:1px solid #cbd5e1;white-space:nowrap;">未来规划</span>
+    </div>
+  </div>
+
+  <!-- merge connector L4→L5 -->
+  <div class="conn-merge">
+    <div class="conn-merge-spacer"></div>
+    <div class="conn-merge-l">↓ CS 生成财务凭证</div>
+    <div class="conn-merge-sep"></div>
+    <div class="conn-merge-r">↓ 共享生成财务凭证</div>
+  </div>
+  <div class="conn" style="padding-top:0;padding-bottom:3px;">
+    <div style="font-size:11px;color:#d0d0d0;">↓</div>
+    <span class="conn-lbl">两路凭证统一写入 SAP 总账</span>
+  </div>
+
+  <!-- ══ L5: SAP 总账 ══ -->
+  <div class="row">
+    <div class="lbl">
+      <div class="lbl-num" style="color:#93c5fd;">L 5</div>
+      <div class="lbl-name" style="color:#93c5fd;">SAP 总账</div>
+    </div>
+    <div class="layer l5">
+      <div class="sap-row">
+        <span class="sap-icon">📒</span>
+        <div>
+          <div class="sap-t">SAP 总账系统</div>
+          <div class="sap-d">接收 CS 核算 + 共享付款两条通道的财务凭证，统一归口管理</div>
+        </div>
+        <div class="sap-tags">
+          <span class="sap-tag">总账科目记录</span>
+          <span class="sap-tag">借贷凭证归档</span>
+          <span class="sap-tag">利润中心核算</span>
+          <span class="sap-tag">跨期凭证管理</span>
+          <span class="sap-tag">财务数仓抽取</span>
+          <span class="sap-tag">FDP 报表输出</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /arch -->
+
+</body>
+</html>
