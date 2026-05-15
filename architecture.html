@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>计提调账系统 — 产品架构图</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #fff; color: #1a1a1a;
+  padding: 28px 32px 40px;
+}
+
+.header { margin-bottom: 20px; }
+.header h1 { font-size: 17px; font-weight: 700; color: #111; }
+.header p  { font-size: 11px; color: #aaa; margin-top: 4px; }
+
+.outer-wrap { display: flex; align-items: stretch; gap: 14px; }
+.main-flow  { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.arch-row   { display: flex; align-items: stretch; }
+
+/* connector */
+.connector-wrap {
+  display: flex; margin-left: 46px; padding: 4px 0;
+  align-items: center; gap: 6px;
+}
+.connector-wrap .vert-line {
+  width: 1px; height: 20px; background: #d0d0d0; margin-left: 17px;
+}
+.connector-wrap .conn-label {
+  font-size: 10px; color: #666;
+  border: 1px solid #ddd; border-radius: 3px;
+  padding: 1px 8px; white-space: nowrap;
+}
+
+/* lane label */
+.lane-label { width: 38px; flex-shrink: 0; margin-right: 7px; display: flex; align-items: stretch; }
+.lane-label-inner {
+  writing-mode: vertical-rl; text-align: center;
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  border-radius: 5px; padding: 6px 0; width: 38px;
+  display: flex; align-items: center; justify-content: center; white-space: nowrap;
+}
+
+/* lane content */
+.lane-content { flex: 1; border-radius: 7px; padding: 12px 14px; }
+
+/* ── AI Agent 层 (Phase 2 · Purple) ── */
+.label-ai .lane-label-inner { background: #f3eeff; color: #6d28d9; border: 1px solid #d4b8f8; }
+.lane-content.ai-layer       { background: #faf7ff; border: 1.5px solid #c8a8f0; }
+
+/* AI agent 能力卡片 */
+.ai-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+.ai-card {
+  background: #fff; border: 1px solid #d8c0f8; border-radius: 6px;
+  padding: 9px 11px; border-left: 3px solid #6d28d9;
+}
+.ai-card-title { font-size: 11px; font-weight: 700; color: #4c1d95; margin-bottom: 4px; }
+.ai-card ul    { list-style: none; margin: 0; padding: 0; }
+.ai-card ul li {
+  font-size: 10px; color: #666; padding: 1px 0 1px 8px; position: relative;
+}
+.ai-card ul li::before { content: '·'; position: absolute; left: 1px; color: #bbb; }
+
+/* 自然语言输入条 */
+.nl-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; border: 1px solid #d4b8f8; border-radius: 6px;
+  padding: 7px 14px; margin-bottom: 10px;
+}
+.nl-icon { font-size: 14px; }
+.nl-text { font-size: 10px; color: #7c3aed; font-weight: 600; flex: 1; }
+.nl-tag {
+  font-size: 9px; color: #6d28d9; background: #f3eeff;
+  border: 1px solid #d4b8f8; border-radius: 3px; padding: 1px 7px;
+}
+
+/* ── 计提调账系统层 ── */
+.label-core .lane-label-inner { background: #f0f4ff; color: #3a5bc0; border: 1px solid #c4d0f0; }
+.lane-content.core            { background: #f8f9ff; border: 1px solid #d4daF4; }
+
+/* ── 下游支持系统层 ── */
+.label-down .lane-label-inner { background: #edfaf2; color: #1d8a4e; border: 1px solid #b8e8cc; }
+.lane-content.downstream      { background: #f5fdf8; border: 1px solid #c4e8d4; }
+
+/* section / sub titles */
+.section-title {
+  font-size: 11px; font-weight: 700; color: #222; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 5px;
+}
+.section-title .sub { font-weight: 500; color: #666; font-size: 10px; }
+
+.sub-divider { border: none; border-top: 1px dashed #d4daF4; margin: 10px 0; }
+
+.sub-section-title {
+  font-size: 10px; font-weight: 700; color: #2d4faa; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 4px;
+}
+.sub-section-title::before {
+  content: ''; display: inline-block;
+  width: 2px; height: 10px; background: #3a5bc0; border-radius: 2px;
+}
+
+/* grids */
+.two-col  { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.four-col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+
+/* ── mbox base ── */
+.mbox { background: #fff; border: 1px solid #dce0ec; border-radius: 6px; padding: 9px 11px; }
+.mbox-title { font-size: 12px; font-weight: 700; color: #0d0d0d; margin-bottom: 5px; }
+.mbox-list  { list-style: none; margin: 0; padding: 0; }
+.mbox-list li {
+  font-size: 10px; color: #666; padding: 1px 0 1px 8px; position: relative;
+}
+.mbox-list li::before { content: '·'; position: absolute; left: 1px; color: #bbb; }
+
+/* ══ Phase-colored mbox variants ══ */
+
+/* P1 · Blue */
+.mbox-p1 {
+  background: #f0f4ff;
+  border: 1px solid #b8c8e8;
+  border-left: 3px solid #3a5bc0;
+}
+.mbox-p1 .mbox-title { color: #1e3a8a; }
+.mbox-p1 .mbox-list li::before { color: #93a8d8; }
+
+/* P2 · Purple — (AI cards already styled separately) */
+.mbox-p2 {
+  background: #faf7ff;
+  border: 1px solid #d0b8f0;
+  border-left: 3px solid #6d28d9;
+}
+.mbox-p2 .mbox-title { color: #4c1d95; }
+.mbox-p2 .mbox-list li::before { color: #b890e8; }
+
+/* P3 · Teal */
+.mbox-p3 {
+  background: #f0fdfa;
+  border: 1px solid #80ccc0;
+  border-left: 3px solid #0f766e;
+}
+.mbox-p3 .mbox-title { color: #134e4a; }
+.mbox-p3 .mbox-list li::before { color: #60b0a8; }
+
+/* P4 · Amber */
+.mbox-p4 {
+  background: #fffbeb;
+  border: 1px solid #ddc060;
+  border-left: 3px solid #b45309;
+}
+.mbox-p4 .mbox-title { color: #78350f; }
+.mbox-p4 .mbox-list li::before { color: #d8a840; }
+
+/* ── role-tag ── */
+.role-tag {
+  display: inline-block; font-size: 9px; padding: 1px 6px;
+  border-radius: 3px; margin-top: 6px;
+  background: #f0f2f8; color: #666; border: 1px solid #d8dce8;
+}
+.role-tag.auto { background: #eaf7f0; color: #2a7a50; border-color: #a8d8bc; }
+
+/* approval flow */
+.flow-wrap {
+  margin-top: 9px;
+  background: #f0f4ff;
+  border: 1px solid #c0cce8;
+  border-left: 3px solid #3a5bc0;
+  border-radius: 5px; padding: 7px 13px;
+}
+.flow-title { font-size: 10px; color: #3a5bc0; font-weight: 600; margin-bottom: 6px; }
+.flow-nodes { display: flex; align-items: center; }
+.fn { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.fn-circle {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700;
+}
+.fn-name { font-size: 9px; color: #444; margin-top: 3px; text-align: center; white-space: nowrap; }
+.fn-arrow {
+  flex: 1; height: 1px; background: #d4d8e8;
+  position: relative; margin-bottom: 13px; min-width: 14px;
+}
+.fn-arrow::after {
+  content: ''; position: absolute; right: -1px; top: -2px;
+  border: 3px solid transparent; border-left: 4px solid #c0c8dc;
+}
+.fc-done   { background: #edfaf2; color: #1d8a4e; border: 1px solid #6dcf9e; }
+.fc-active { background: #eef4ff; color: #2d5fcc; border: 1px solid #7090e0; }
+.fc-wait   { background: #f5f5f5; color: #aaa;    border: 1px solid #d8d8d8; }
+.fc-end    { background: #fff8ee; color: #b06010; border: 1px solid #e8c070; }
+
+/* CS → SAP */
+.sap-indent-wrap { position: relative; padding-left: 20px; }
+.sap-indent-wrap::before {
+  content: ''; position: absolute; left: 9px;
+  top: 0; bottom: 10px; width: 1px; background: #b8c8e8;
+}
+.sap-indent-wrap::after {
+  content: ''; position: absolute; left: 9px;
+  bottom: 10px; width: 12px; height: 1px; background: #b8c8e8;
+}
+.mbox.sap { border-color: #a8d8b8; background: #f0fbf4; margin-left: 20px; }
+.mbox.sap .mbox-title { color: #1a6e3e; }
+
+/* parallel panel */
+.para-panel {
+  width: 200px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  border: 1px solid #f0dfa8; border-radius: 8px;
+  background: #fffaf2; overflow: hidden;
+}
+.para-panel-header {
+  background: #fff8ee; border-bottom: 1px solid #f0dfa8;
+  padding: 7px 12px; display: flex; align-items: center; gap: 5px;
+}
+.para-panel-header .ph-label { font-size: 10px; font-weight: 700; color: #8a4800; letter-spacing: 1px; }
+.para-panel-header .ph-sub   { font-size: 10px; color: #a06820; }
+
+.para-tap { display: flex; align-items: center; gap: 5px; padding: 0 10px; }
+.para-tap .tap-arrow { font-size: 11px; color: #c88820; line-height: 1; }
+.para-tap .tap-label {
+  font-size: 9px; color: #8a5a10;
+  border: 1px solid #e0c070; border-radius: 3px;
+  padding: 1px 6px; background: #fff8ee; white-space: nowrap;
+}
+
+.para-section {
+  flex: 1; display: flex; flex-direction: column;
+  justify-content: center; padding: 8px 10px;
+  border-bottom: 1px dashed #f0dfa8; gap: 5px;
+}
+.para-section:last-child { border-bottom: none; }
+
+.para-box { background: #fff; border: 1px solid #e8d8a0; border-radius: 6px; padding: 8px 10px; }
+.para-box .pb-title { font-size: 11px; font-weight: 700; color: #5a2e00; margin-bottom: 4px; }
+.para-box ul { list-style: none; margin: 0; padding: 0; }
+.para-box ul li {
+  font-size: 9px; color: #886040; padding: 1px 0 1px 8px; position: relative;
+}
+.para-box ul li::before { content: '·'; position: absolute; left: 1px; color: #c8a870; }
+.para-box .pb-role {
+  display: inline-block; font-size: 9px; padding: 1px 5px;
+  border-radius: 3px; margin-top: 4px;
+  background: #fdf0d8; color: #7a5020; border: 1px solid #e0c888;
+}
+.para-down-arrow       { text-align: center; font-size: 12px; color: #b88820; line-height: 1; }
+.para-down-arrow-label { font-size: 9px; color: #906820; text-align: center; }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>计提调账系统 · 产品架构图</h1>
+  <p>AI Agent 智能交互 → 计提调账系统（业务接入 + 功能层）→ CS 核算记账 → SAP 总账 · 平行数据与对账（右侧独立运行）</p>
+</div>
+
+<div class="outer-wrap">
+
+  <div class="main-flow">
+
+    <!-- Row 0: AI Agent 层 · Phase 2 Purple -->
+    <div class="arch-row">
+      <div class="lane-label label-ai">
+        <div class="lane-label-inner">AI Agent</div>
+      </div>
+      <div class="lane-content ai-layer">
+
+        <div class="nl-bar">
+          <span class="nl-icon">🤖</span>
+          <span class="nl-text">用户通过自然语言与系统交互，AI Agent 理解意图并调用对应系统能力</span>
+          <span class="nl-tag">大语言模型驱动</span>
+          <span class="nl-tag">意图识别 + 参数提取</span>
+          <span class="nl-tag">多轮对话</span>
+        </div>
+
+        <div class="ai-grid">
+          <div class="ai-card">
+            <div class="ai-card-title">📤 智能上传</div>
+            <ul>
+              <li>「帮我上传这份计提表」</li>
+              <li>自动解析文件字段 + 校验</li>
+              <li>异常字段提示并引导修正</li>
+              <li>确认后自动提交审批流</li>
+            </ul>
+          </div>
+          <div class="ai-card">
+            <div class="ai-card-title">🔍 单据查询</div>
+            <ul>
+              <li>「查一下本月收入计提状态」</li>
+              <li>「ADJ-2025-003 审批到哪了」</li>
+              <li>自然语言转结构化查询条件</li>
+              <li>结果摘要 + 跳转详情</li>
+            </ul>
+          </div>
+          <div class="ai-card">
+            <div class="ai-card-title">✅ 审批辅助</div>
+            <ul>
+              <li>「我有几条待审批」</li>
+              <li>推送待审批摘要与风险提示</li>
+              <li>支持对话确认通过 / 驳回</li>
+              <li>批量处理并记录操作日志</li>
+            </ul>
+          </div>
+          <div class="ai-card">
+            <div class="ai-card-title">📊 数据问答</div>
+            <ul>
+              <li>「本月成本计提总额是多少」</li>
+              <li>「上月调账差异原因汇总」</li>
+              <li>跨单据聚合计算与分析</li>
+              <li>输出结论 + 来源数据溯源</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- connector -->
+    <div class="connector-wrap">
+      <div class="vert-line"></div>
+      <span class="conn-label">Agent 调用系统接口 → 业务接入 / 功能层</span>
+    </div>
+
+    <!-- Row 1: 计提调账系统 -->
+    <div class="arch-row">
+      <div class="lane-label label-core">
+        <div class="lane-label-inner">计提调账系统</div>
+      </div>
+      <div class="lane-content core">
+
+        <div class="sub-section-title">业务接入</div>
+        <div class="two-col" style="margin-bottom:0;">
+
+          <!-- 人工上传 · P1 + P3 双色提示 -->
+          <div class="mbox mbox-p1">
+            <div class="mbox-title" style="display:flex;align-items:center;gap:6px;">
+              📂 人工上传
+              <span style="font-size:8px;font-weight:700;padding:1px 6px;border-radius:3px;background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;">P1 计提</span>
+              <span style="font-size:8px;font-weight:700;padding:1px 6px;border-radius:3px;background:#ccfbf1;color:#0f766e;border:1px solid #99f6e4;">P3 调账</span>
+            </div>
+            <ul class="mbox-list">
+              <li>下载 Excel 模板（收入 / 成本 / 费用计提模板）</li>
+              <li>下载调账模板（正负金额、4 种调账原因）</li>
+              <li>上传后系统自动校验格式与枚举值</li>
+              <li>可附佐证附件（合同截图、差异说明等）</li>
+            </ul>
+            <span class="role-tag">业务专员 / 财务BP</span>
+          </div>
+
+          <div class="mbox">
+            <div class="mbox-title">🔌 业务系统接入</div>
+            <ul class="mbox-list">
+              <li>ES 系统 — 企业服务订单数据自动推送</li>
+              <li>SWO 系统 — 服务工单 / 合同执行数据推送</li>
+              <li>TP 系统 — 交易平台收款 / 退款数据推送</li>
+              <li>接入后自动完成基础校验并生成单据</li>
+            </ul>
+            <span class="role-tag auto">系统自动（无需人工）</span>
+          </div>
+        </div>
+
+        <hr class="sub-divider">
+
+        <div class="sub-section-title">功能层</div>
+
+        <!-- 工作台看板 · P4 Amber -->
+        <div class="mbox mbox-p4" style="margin-bottom:8px;">
+          <div class="mbox-title">📊 工作台看板</div>
+          <ul class="mbox-list" style="display:flex;flex-wrap:wrap;gap:0 24px;">
+            <li>待审批提醒（计提 + 调账）</li>
+            <li>本月计提汇总（按类型）</li>
+            <li>最近计提单 / 调账单</li>
+            <li>快速新建 / 发起调账入口</li>
+          </ul>
+          <span class="role-tag">所有业务用户</span>
+        </div>
+
+        <div class="four-col" style="margin-bottom:0;">
+
+          <!-- 计提管理 · P1 Blue -->
+          <div class="mbox mbox-p1">
+            <div class="mbox-title">📋 计提管理</div>
+            <ul class="mbox-list">
+              <li>计提列表（全状态查询）</li>
+              <li>上传计提表 + 模板下载</li>
+              <li>计提单详情 / 明细行</li>
+              <li>草稿 → 审批中 → 已记账</li>
+            </ul>
+            <span class="role-tag">业务专员 / 财务BP</span>
+          </div>
+
+          <!-- 调账&入账管理 · P2 Purple -->
+          <div class="mbox mbox-p2">
+            <div class="mbox-title">🔄 调账 &amp; 入账管理</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:5px;">
+              <div>
+                <div style="font-size:10px;font-weight:700;color:#4c1d95;margin-bottom:3px;">调账管理</div>
+                <ul class="mbox-list">
+                  <li>调账列表（类型/原因筛选）</li>
+                  <li>上传调账单（正/负金额）</li>
+                  <li>附件上传（佐证材料）</li>
+                  <li>冲销 / 补录记账</li>
+                </ul>
+              </div>
+              <div>
+                <div style="font-size:10px;font-weight:700;color:#4c1d95;margin-bottom:3px;">入账管理</div>
+                <ul class="mbox-list">
+                  <li>收入入账单管理</li>
+                  <li>利润中心客户确认</li>
+                  <li>收入科目匹配</li>
+                  <li>入账状态追踪</li>
+                </ul>
+              </div>
+            </div>
+            <span class="role-tag">业务专员 / 财务BP</span>
+          </div>
+
+          <!-- 审批管理 · P1 Blue -->
+          <div class="mbox mbox-p1">
+            <div class="mbox-title">✅ 审批管理</div>
+            <ul class="mbox-list">
+              <li>计提 & 调账统一审批流</li>
+              <li>待我审批（双类型切换）</li>
+              <li>审批通过 / 驳回 + 原因</li>
+              <li>审批进度实时追踪</li>
+            </ul>
+            <span class="role-tag">直属上级 / 财务BP</span>
+          </div>
+
+          <!-- 规则配置 · P1 Blue -->
+          <div class="mbox mbox-p1">
+            <div class="mbox-title">⚙️ 规则配置</div>
+            <ul class="mbox-list">
+              <li>收入 / 成本 / 费用计提规则配置</li>
+              <li>OTD 订单到交付计提规则配置</li>
+              <li>PTP 采购到付款计提规则配置</li>
+              <li>调账规则配置</li>
+              <li>通用规则配置</li>
+            </ul>
+            <span class="role-tag">财务负责人 / 管理员</span>
+          </div>
+        </div>
+
+        <!-- 审批流 · P1 Blue -->
+        <div class="flow-wrap">
+          <div class="flow-title">▸ 统一审批流（计提单 & 调账单共用）</div>
+          <div class="flow-nodes">
+            <div class="fn"><div class="fn-circle fc-done">填报</div><div class="fn-name">填报上传</div></div>
+            <div class="fn-arrow"></div>
+            <div class="fn"><div class="fn-circle fc-done">校验</div><div class="fn-name">基础校验</div></div>
+            <div class="fn-arrow"></div>
+            <div class="fn"><div class="fn-circle fc-active">上级</div><div class="fn-name">上级审批</div></div>
+            <div class="fn-arrow"></div>
+            <div class="fn"><div class="fn-circle fc-wait">财务</div><div class="fn-name">财务BP审批</div></div>
+            <div class="fn-arrow"></div>
+            <div class="fn"><div class="fn-circle fc-end">入账</div><div class="fn-name">记账完成</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- connector -->
+    <div class="connector-wrap">
+      <div class="vert-line"></div>
+      <span class="conn-label">审批通过 → 推送 CS 系统核算记账</span>
+    </div>
+
+    <!-- Row 2: 下游支持系统 -->
+    <div class="arch-row">
+      <div class="lane-label label-down">
+        <div class="lane-label-inner">下游支持系统</div>
+      </div>
+      <div class="lane-content downstream">
+        <div class="section-title">下游支持系统 <span class="sub">— CS 执行核算记账，向 SAP 生成财务凭证</span></div>
+
+        <!-- CS 系统 · P1 Blue -->
+        <div class="mbox mbox-p1" style="margin-bottom:0;">
+          <div class="mbox-title">🏦 CS 系统（核算记账）</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:5px;">
+            <div>
+              <div style="font-size:10px;font-weight:700;color:#1e3a8a;margin-bottom:3px;">计提 & 调账单据管理</div>
+              <ul class="mbox-list">
+                <li>计提单核算记账（收入 / 成本 / 费用）</li>
+                <li>调账单冲销 / 补录记账</li>
+                <li>跨期调整记账（调账场景）</li>
+                <li>记账结果状态同步回计提调账系统</li>
+              </ul>
+              <span class="role-tag auto">系统自动</span>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:#1e3a8a;margin-bottom:3px;">会计引擎（CS 侧）</div>
+              <ul class="mbox-list">
+                <li>接收计提调账系统推送的已审批单据</li>
+                <li>匹配记账规则 → 生成凭证参数</li>
+                <li>触发核算记账，回写状态「已记账」</li>
+              </ul>
+              <span class="role-tag auto">系统自动</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sap-indent-wrap">
+          <div style="padding:4px 0;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:9px;color:#5a9a70;border:1px solid #b8e8cc;border-radius:3px;padding:1px 7px;background:#f5fdf8;">
+              CS 生成财务凭证 → 写入 SAP 总账
+            </span>
+          </div>
+          <div class="mbox sap">
+            <div class="mbox-title">📒 SAP（总账系统）</div>
+            <ul class="mbox-list" style="display:flex;flex-wrap:wrap;gap:0 24px;">
+              <li>总账科目记录（收入 / 成本 / 费用科目）</li>
+              <li>财务凭证归档（借 / 贷方向）</li>
+              <li>利润中心维度核算</li>
+              <li>跨期凭证管理（调账场景）</li>
+            </ul>
+            <span class="role-tag auto">系统自动写入</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /main-flow -->
+
+  <!-- RIGHT: parallel panel -->
+  <div class="para-panel">
+    <div class="para-panel-header">
+      <span class="ph-label">平行系统</span>
+      <span class="ph-sub">— 独立运行</span>
+    </div>
+
+    <div class="para-section" style="flex:3;">
+      <div class="para-tap">
+        <span class="tap-arrow">←</span>
+        <span class="tap-label">读取 · 计提调账系统</span>
+      </div>
+      <div class="para-tap">
+        <span class="tap-arrow">←</span>
+        <span class="tap-label">读取 · 下游支持系统</span>
+      </div>
+      <div class="para-box" style="margin-top:5px;">
+        <div class="pb-title">🗄️ 财务数仓</div>
+        <ul>
+          <li>定时抽取计提明细（已记账）</li>
+          <li>定时抽取调账明细（已记账）</li>
+          <li>数据清洗 + 维度补全</li>
+          <li>ODS → DWD → DWS 分层建设</li>
+          <li>为 FDP 提供标准化数据底座</li>
+        </ul>
+        <span class="pb-role">数据团队 / 财务BP</span>
+      </div>
+      <div class="para-down-arrow">↓</div>
+      <div class="para-down-arrow-label">标准化数据输出</div>
+    </div>
+
+    <div class="para-section" style="flex:3;">
+      <div class="para-tap">
+        <span class="tap-arrow">←</span>
+        <span class="tap-label">读取 · 计提调账系统</span>
+      </div>
+      <div class="para-tap">
+        <span class="tap-arrow">←</span>
+        <span class="tap-label">读取 · 下游支持系统</span>
+      </div>
+      <div class="para-box" style="margin-top:5px;">
+        <div class="pb-title">📈 FDP 报表（业财对账）</div>
+        <ul>
+          <li>收入计提 vs CS 收款记账</li>
+          <li>成本/费用计提 vs SAP 科目余额</li>
+          <li>调账金额 vs 凭证冲销金额</li>
+          <li>月结差异报表（字段级比对）</li>
+          <li>输出业财对账结论</li>
+        </ul>
+        <span class="pb-role">财务BP / 财务核算</span>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /outer-wrap -->
+
+
+</body>
+</html>
